@@ -7,6 +7,8 @@ namespace MyChatApp
     {
         public string Name { get; set;}
         public ChatHistory ChatHistory { get; set; }
+        public bool IsModified { get; set; } = true;
+        public bool IsTitleGenerated { get; set; } = false;
         public override string ToString() => Name;
     }
 }

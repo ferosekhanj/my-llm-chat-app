@@ -56,7 +56,7 @@ namespace MyChatApp
                     // ollama
 #pragma warning disable SKEXP0070
                     builder = Kernel.CreateBuilder().AddOllamaChatCompletion(llmProvider.Model, new Uri(llmProvider.BaseUrl));
-                    PromptExecutionSettings _promptExecutionSettings = new OllamaPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() };
+                    PromptExecutionSettings _promptExecutionSettings = new OllamaPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(options: new() { RetainArgumentTypes = true }) };
                     _kernels.Add(llmProvider.Name.ToLowerInvariant(), (builder, _promptExecutionSettings, null));
                 }
             }
@@ -72,14 +72,21 @@ namespace MyChatApp
                 {
                     kernelInfo.kernel = kernelInfo.builder.Build();
                     _kernels[providerName] = (kernelInfo.builder, kernelInfo.promptSettings, kernelInfo.kernel);
-                    if (useTools)
-                        AddTools(kernelInfo.kernel);
-                    else
-                        ClearTools(kernelInfo.kernel);
                 }
                 var _kernel = kernelInfo.kernel;
                 var _promptExecutionSettings = kernelInfo.promptSettings;
                 var _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
+                if (useTools)
+                {
+                    if(_kernel.Plugins.Count == 0)
+                        AddTools(kernelInfo.kernel);
+                }
+                else
+                {
+                    ClearTools(kernelInfo.kernel);
+                    _promptExecutionSettings = null;
+                }
+
                 return (_kernel,_chatCompletionService,_promptExecutionSettings);
             }
             throw new ArgumentException($"Provider '{providerName}' not found.");

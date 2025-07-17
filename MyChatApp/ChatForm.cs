@@ -1,5 +1,6 @@
 using Azure;
 using Markdig;
+using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.VisualBasic;
 using System.Text;
 
@@ -24,7 +25,7 @@ namespace MyChatApp
             InitWebView();
 
             _toolRepo = new ToolRepository(_appSettings);
-            _aiChatProviders = new AIChatProviders(_appSettings,_toolRepo);
+            _aiChatProviders = new AIChatProviders(_appSettings, _toolRepo);
             _aiChat = new AIChat(_aiChatProviders);
 
             _toolRepo.ProgressChanged += (s, e) => this.BeginInvoke(() => toolsProgress.Value = e);
@@ -40,6 +41,10 @@ namespace MyChatApp
 
             RefreshModels();
             _aiChatProviders.StatusChanged += (s, e) => this.BeginInvoke(() => DisplayStatusMessage(e));
+
+            _aiChat.LoadChatHistories();
+
+            timer1.Start();
         }
 
         private void RefreshChatHistory()
@@ -51,7 +56,7 @@ namespace MyChatApp
                 chatHistory.Items.Add(chat);
             }
             chatHistory.EndUpdate();
-            chatHistory.SelectedIndex = (chatHistory.Items.Count > 0) ? chatHistory.Items.Count - 1 : -1;
+            chatHistory.SelectedIndex = (chatHistory.Items.Count > 0) ? 0 : -1;
         }
 
         private void RefreshTools()
@@ -84,6 +89,10 @@ namespace MyChatApp
             for (int i = 0; i < e.Count; i++)
             {
                 var userMessageText = e[i].Content;
+                if ( userMessageText == "" || e[i].Role == AuthorRole.Tool)
+                {
+                    continue;
+                }
                 if (i % 2 == 0)
                 {
                     // Escape quotes for JavaScript
@@ -313,8 +322,7 @@ namespace MyChatApp
         private void btnNewChat_Click(object sender, EventArgs e)
         {
             _aiChat.CreateNewChat();
-            chatHistory.SelectedIndex = chatHistory.Items.Count - 1;
-            GetReplyFromAI();
+            chatHistory.SelectedIndex = 0;
         }
 
         private void chatHistory_SelectedIndexChanged(object sender, EventArgs e)
@@ -356,6 +364,18 @@ namespace MyChatApp
         private void btnAbout_Click(object sender, EventArgs e)
         {
             MessageBox.Show("A simple LLM Chat app developed with Semantic Kernel\n 15 July 2025.", "About MyChatApp", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void ChatForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _aiChat.SaveChatHistories();
+        }
+
+        private async void timer1_Tick(object sender, EventArgs e)
+        {
+            timer1.Stop();
+            await _aiChat.CreateTitlesAsync();
+            timer1.Start();
         }
     }
 }

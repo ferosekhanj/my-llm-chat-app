@@ -28,12 +28,16 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChatForm));
             splitContainer1 = new SplitContainer();
+            groupBox3 = new GroupBox();
             chatHistory = new ListBox();
             splitContainer2 = new SplitContainer();
+            groupBox1 = new GroupBox();
             chatContent = new Microsoft.Web.WebView2.WinForms.WebView2();
             splitContainer3 = new SplitContainer();
+            groupBox2 = new GroupBox();
             userMessage = new TextBox();
             btnAbout = new Button();
             chkUseTools = new CheckBox();
@@ -53,27 +57,25 @@
             statusText = new ToolStripLabel();
             openFileDialog1 = new OpenFileDialog();
             panel1 = new Panel();
-            groupBox1 = new GroupBox();
-            groupBox2 = new GroupBox();
-            groupBox3 = new GroupBox();
+            timer1 = new System.Windows.Forms.Timer(components);
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
             splitContainer1.SuspendLayout();
+            groupBox3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer2).BeginInit();
             splitContainer2.Panel1.SuspendLayout();
             splitContainer2.Panel2.SuspendLayout();
             splitContainer2.SuspendLayout();
+            groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)chatContent).BeginInit();
             ((System.ComponentModel.ISupportInitialize)splitContainer3).BeginInit();
             splitContainer3.Panel1.SuspendLayout();
             splitContainer3.Panel2.SuspendLayout();
             splitContainer3.SuspendLayout();
+            groupBox2.SuspendLayout();
             toolStrip1.SuspendLayout();
             panel1.SuspendLayout();
-            groupBox1.SuspendLayout();
-            groupBox2.SuspendLayout();
-            groupBox3.SuspendLayout();
             SuspendLayout();
             // 
             // splitContainer1
@@ -92,6 +94,17 @@
             splitContainer1.Size = new Size(1178, 661);
             splitContainer1.SplitterDistance = 160;
             splitContainer1.TabIndex = 0;
+            // 
+            // groupBox3
+            // 
+            groupBox3.Controls.Add(chatHistory);
+            groupBox3.Dock = DockStyle.Fill;
+            groupBox3.Location = new Point(0, 0);
+            groupBox3.Name = "groupBox3";
+            groupBox3.Size = new Size(160, 661);
+            groupBox3.TabIndex = 1;
+            groupBox3.TabStop = false;
+            groupBox3.Text = "Chat HIstory";
             // 
             // chatHistory
             // 
@@ -121,6 +134,17 @@
             splitContainer2.Size = new Size(1014, 661);
             splitContainer2.SplitterDistance = 503;
             splitContainer2.TabIndex = 0;
+            // 
+            // groupBox1
+            // 
+            groupBox1.Controls.Add(chatContent);
+            groupBox1.Dock = DockStyle.Fill;
+            groupBox1.Location = new Point(0, 0);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Size = new Size(1014, 503);
+            groupBox1.TabIndex = 1;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "Chat Console";
             // 
             // chatContent
             // 
@@ -155,6 +179,17 @@
             splitContainer3.Size = new Size(1014, 154);
             splitContainer3.SplitterDistance = 807;
             splitContainer3.TabIndex = 0;
+            // 
+            // groupBox2
+            // 
+            groupBox2.Controls.Add(userMessage);
+            groupBox2.Dock = DockStyle.Fill;
+            groupBox2.Location = new Point(0, 0);
+            groupBox2.Name = "groupBox2";
+            groupBox2.Size = new Size(807, 154);
+            groupBox2.TabIndex = 1;
+            groupBox2.TabStop = false;
+            groupBox2.Text = "Type your message";
             // 
             // userMessage
             // 
@@ -305,38 +340,10 @@
             panel1.Size = new Size(1178, 661);
             panel1.TabIndex = 2;
             // 
-            // groupBox1
+            // timer1
             // 
-            groupBox1.Controls.Add(chatContent);
-            groupBox1.Dock = DockStyle.Fill;
-            groupBox1.Location = new Point(0, 0);
-            groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(1014, 503);
-            groupBox1.TabIndex = 1;
-            groupBox1.TabStop = false;
-            groupBox1.Text = "Chat Console";
-            // 
-            // groupBox2
-            // 
-            groupBox2.Controls.Add(userMessage);
-            groupBox2.Dock = DockStyle.Fill;
-            groupBox2.Location = new Point(0, 0);
-            groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(807, 154);
-            groupBox2.TabIndex = 1;
-            groupBox2.TabStop = false;
-            groupBox2.Text = "Type your message";
-            // 
-            // groupBox3
-            // 
-            groupBox3.Controls.Add(chatHistory);
-            groupBox3.Dock = DockStyle.Fill;
-            groupBox3.Location = new Point(0, 0);
-            groupBox3.Name = "groupBox3";
-            groupBox3.Size = new Size(160, 661);
-            groupBox3.TabIndex = 1;
-            groupBox3.TabStop = false;
-            groupBox3.Text = "Chat HIstory";
+            timer1.Interval = 5000;
+            timer1.Tick += timer1_Tick;
             // 
             // ChatForm
             // 
@@ -347,28 +354,29 @@
             Controls.Add(toolStrip1);
             Name = "ChatForm";
             Text = "JFK LLM Chat";
+            FormClosing += ChatForm_FormClosing;
             Load += Form1_Load;
             splitContainer1.Panel1.ResumeLayout(false);
             splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
             splitContainer1.ResumeLayout(false);
+            groupBox3.ResumeLayout(false);
             splitContainer2.Panel1.ResumeLayout(false);
             splitContainer2.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainer2).EndInit();
             splitContainer2.ResumeLayout(false);
+            groupBox1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)chatContent).EndInit();
             splitContainer3.Panel1.ResumeLayout(false);
             splitContainer3.Panel2.ResumeLayout(false);
             splitContainer3.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer3).EndInit();
             splitContainer3.ResumeLayout(false);
+            groupBox2.ResumeLayout(false);
+            groupBox2.PerformLayout();
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
             panel1.ResumeLayout(false);
-            groupBox1.ResumeLayout(false);
-            groupBox2.ResumeLayout(false);
-            groupBox2.PerformLayout();
-            groupBox3.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -402,5 +410,6 @@
         private GroupBox groupBox1;
         private GroupBox groupBox2;
         private GroupBox groupBox3;
+        private System.Windows.Forms.Timer timer1;
     }
 }
