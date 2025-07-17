@@ -182,7 +182,7 @@ namespace MyChatApp
             _logger.LogInformation("Get Title");
 
             // Add the user message to the active chat history
-            chat.AddUserMessage("Create a short title for this chat so that it can be shown in the list.");
+            chat.AddUserMessage("You are an AI assistant that summarizes conversations into short, clear, and engaging titles (3–6 words). Based on this chat content, generate one concise title that best represents the main topic or purpose of the discussion. Avoid generic terms like 'Chat' or 'Conversation'. Make it descriptive and relevant.");
 
             var (_kernel, _chatCompletionService, _promptExecutionSettings) = _aiChatProviders.GetKernelAndSettings("siemens", false);
 
@@ -200,6 +200,8 @@ namespace MyChatApp
 
             // Notify subscribers that the chat history has been updated
             OnChatTitleChanged();
+
+            OnStatusChanged("Done.");
 
             return response.Content;
         }

@@ -39,6 +39,7 @@ namespace MyChatApp
             _aiChat.ChatTitleChanged += (s, e) => this.BeginInvoke(() => RefreshChatHistory());
 
             RefreshModels();
+            _aiChatProviders.StatusChanged += (s, e) => this.BeginInvoke(() => DisplayStatusMessage(e));
         }
 
         private void RefreshChatHistory()
@@ -86,8 +87,8 @@ namespace MyChatApp
                 if (i % 2 == 0)
                 {
                     // Escape quotes for JavaScript
-                    var escaped = userMessageText.Replace("\"", "\\\"").Replace("\n", "");
-                    await chatContent.ExecuteScriptAsync($"addHtml(\"{escaped}\");");
+                    var escaped = userMessageText.Replace("\"", "\\\"");
+                    await chatContent.ExecuteScriptAsync($"addHtml(`{escaped}`);");
                 }
                 else
                 {
@@ -97,10 +98,10 @@ namespace MyChatApp
                     string htmlChunk = Markdown.ToHtml(userMessageText, pipeline);
 
                     // Escape quotes for JavaScript
-                    var escaped = htmlChunk.Replace("\"", "\\\"").Replace("\n", "");
+                    var escaped = htmlChunk.Replace("\"", "\\\"");
 
                     // Inject into WebView2
-                    await chatContent.ExecuteScriptAsync($"updateHtml(\"{escaped}\");");
+                    await chatContent.ExecuteScriptAsync($"updateHtml(`{escaped}`);");
                 }
             }
         }
@@ -113,31 +114,31 @@ namespace MyChatApp
                 <html>
                 <head>
                     <style>
-                    body {
-                        font-family: 'Segoe UI', sans-serif;
-                        background-color: #c9c9cb;
-                        padding: 16px;
-                    }
-                    .user-msg, .bot-msg {
-                        margin: 10px;
-                        padding: 12px 16px;
-                        border-radius: 12px;
-                        line-height: 1.5;
-                    }
-                    .user-msg {
-                        background-color: #e0e0e0;
-                        align-self: flex-end;
-                        text-align: left;
-                    }
-                    .bot-msg {
-                        background-color: #ffffff;
-                        border: 1px solid #ddd;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                    }
-                    .chat-container {
-                        display: flex;
-                        flex-direction: column;
-                    }
+                        body {
+                            font-family: 'Segoe UI', sans-serif;
+                            background-color: #e9e9eb;
+                            padding: 16px;
+                        }
+                        .user-msg, .bot-msg {
+                            margin: 10px;
+                            padding: 12px 16px;
+                            border-radius: 12px;
+                            line-height: 1.5;
+                        }
+                        .user-msg {
+                            background-color: #e0e0e0;
+                            align-self: flex-end;
+                            text-align: left;
+                        }
+                        .bot-msg {
+                            background-color: #ffffff;
+                            border: 1px solid #ddd;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                        }
+                        .chat-container {
+                            display: flex;
+                            flex-direction: column;
+                        }
                         table {
                           width: 100%;
                           border-collapse: collapse;
@@ -168,6 +169,46 @@ namespace MyChatApp
                         tr:hover {
                           background-color: #f0f8ff;
                         }
+                        code {
+                            background-color: #f6f8fa;
+                            color: #24292e;
+                            font-family: Consolas, Monaco, 'Courier New', monospace;
+                            font-size: 14px;
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            border: 1px solid #e1e4e8;
+                        }
+
+                        pre {
+                            background-color: #f6f8fa;
+                            border: 1px solid #e1e4e8;
+                            border-radius: 6px;
+                            padding: 12px;
+                            overflow-x: auto;
+                            font-size: 14px;
+                            margin: 12px 0;
+                        }
+                        pre code {
+                            color: #24292e;
+                            background: none;
+                            font-family: Consolas, Monaco, 'Courier New', monospace;
+                        }
+
+                        pre code {
+                            display: block;
+                            counter-reset: line;
+                        }
+                        pre code span {
+                            display: block;
+                            counter-increment: line;
+                        }
+                        pre code span::before {
+                            content: counter(line);
+                            display: inline-block;
+                            width: 2em;
+                            margin-right: 10px;
+                            color: #6a737d;
+                        }
                     </style>
                     <script>
                         let replyDiv = null;
@@ -195,7 +236,6 @@ namespace MyChatApp
                     </script>
                 </head>
                 <body>
-                <h1>Chat</h1>
                 </body>
                 </html>
     """;
@@ -233,8 +273,8 @@ namespace MyChatApp
 
             var userMessageText = userMessage.Text;
             // Escape quotes for JavaScript
-            string escaped = userMessageText.Replace("\"", "\\\"").Replace("\n", "");
-            await chatContent.ExecuteScriptAsync($"addHtml(\"{escaped}\");");
+            string escaped = userMessageText.Replace("\"", "\\\"");
+            await chatContent.ExecuteScriptAsync($"addHtml(`{escaped}`);");
 
             // Clear the input field
             userMessage.Clear();
@@ -253,10 +293,10 @@ namespace MyChatApp
                     string htmlChunk = Markdown.ToHtml(fullResponse, pipeline);
 
                     // Escape quotes for JavaScript
-                    escaped = htmlChunk.Replace("\"", "\\\"").Replace("\n", "");
+                    escaped = htmlChunk.Replace("\"", "\\\"");
 
                     // Inject into WebView2
-                    await chatContent.ExecuteScriptAsync($"updateHtml(\"{escaped}\");");
+                    await chatContent.ExecuteScriptAsync($"updateHtml(`{escaped}`);");
                 }
             }
             catch (Exception ex)
@@ -274,6 +314,7 @@ namespace MyChatApp
         {
             _aiChat.CreateNewChat();
             chatHistory.SelectedIndex = chatHistory.Items.Count - 1;
+            GetReplyFromAI();
         }
 
         private void chatHistory_SelectedIndexChanged(object sender, EventArgs e)
