@@ -1,5 +1,6 @@
 using Azure;
 using Markdig;
+using Microsoft.VisualBasic;
 using System.Text;
 
 namespace MyChatApp
@@ -7,11 +8,14 @@ namespace MyChatApp
     public partial class ChatForm : Form
     {
         ToolRepository _toolRepo;
+        AIChatProviders _aiChatProviders;
         AIChat _aiChat;
+        MyChatAppSettings _appSettings;
 
-        public ChatForm()
+        public ChatForm(MyChatAppSettings appSettings)
         {
             InitializeComponent();
+            _appSettings = appSettings;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -19,11 +23,11 @@ namespace MyChatApp
             // Initialize the WebView2 control
             InitWebView();
 
-            _toolRepo = new ToolRepository();
-            _aiChat = new AIChat(_toolRepo);
+            _toolRepo = new ToolRepository(_appSettings);
+            _aiChatProviders = new AIChatProviders(_appSettings,_toolRepo);
+            _aiChat = new AIChat(_aiChatProviders);
 
-
-            _toolRepo.ProgressChanged += (s, e) => this.BeginInvoke(() => toolsProgress.Value=e);
+            _toolRepo.ProgressChanged += (s, e) => this.BeginInvoke(() => toolsProgress.Value = e);
             _toolRepo.StatusChanged += (s, e) => this.BeginInvoke(() => DisplayStatusMessage(e));
             _toolRepo.McpClients.ListChanged += (s, e) => this.BeginInvoke(() => RefreshTools());
 
@@ -31,32 +35,44 @@ namespace MyChatApp
             _aiChat.StatusChanged += (s, e) => this.BeginInvoke(() => DisplayStatusMessage(e));
 
             RefreshChatHistory();
-            _aiChat.ChatHistories.ListChanged += (s, e) => this.BeginInvoke(()=>RefreshChatHistory());
-            _aiChat.ChatTitleChanged += (s, e) => this.BeginInvoke(()=>RefreshChatHistory());
+            _aiChat.ChatHistories.ListChanged += (s, e) => this.BeginInvoke(() => RefreshChatHistory());
+            _aiChat.ChatTitleChanged += (s, e) => this.BeginInvoke(() => RefreshChatHistory());
+
+            RefreshModels();
         }
 
         private void RefreshChatHistory()
         {
             chatHistory.BeginUpdate();
             chatHistory.Items.Clear();
-            foreach(var chat in _aiChat.ChatHistories)
+            foreach (var chat in _aiChat.ChatHistories)
             {
                 chatHistory.Items.Add(chat);
             }
             chatHistory.EndUpdate();
-            chatHistory.SelectedIndex = (chatHistory.Items.Count > 0 ) ? chatHistory.Items.Count - 1 : -1;
+            chatHistory.SelectedIndex = (chatHistory.Items.Count > 0) ? chatHistory.Items.Count - 1 : -1;
         }
 
         private void RefreshTools()
         {
-            toolsCombo.BeginUpdate();
-            toolsCombo.Items.Clear();
-            foreach (var tool in _toolRepo.McpClients)
+            toolsDropDown.DropDownItems.Clear();
+            toolsDropDown.DropDownItems.Add("All");
+            foreach (var tool in _toolRepo.GetAvailableTools())
             {
-                toolsCombo.Items.Add(tool.ServerInfo.Name);
+                toolsDropDown.DropDownItems.Add(new ToolStripMenuItem(tool.Name) { CheckOnClick = true });
             }
-            toolsCombo.EndUpdate();
-            toolsCombo.SelectedIndex = (toolsCombo.Items.Count > 0) ? 0 : -1;
+        }
+
+        private void RefreshModels()
+        {
+            modelCombo.BeginUpdate();
+            modelCombo.Items.Clear();
+            foreach (var model in _aiChatProviders.AvailableProviders)
+            {
+                modelCombo.Items.Add(model);
+            }
+            modelCombo.EndUpdate();
+            modelCombo.SelectedIndex = 0;
         }
 
         private async void _aiChat_ActiveChatChanged(object? sender, Microsoft.SemanticKernel.ChatCompletion.ChatHistory e)
@@ -64,10 +80,10 @@ namespace MyChatApp
             //InitWebView();
             var _ = await chatContent.ExecuteScriptAsync($"clearDynamicDivs();");
 
-            for (int i=0; i< e.Count; i++)
+            for (int i = 0; i < e.Count; i++)
             {
                 var userMessageText = e[i].Content;
-                if ( i%2 == 0)
+                if (i % 2 == 0)
                 {
                     // Escape quotes for JavaScript
                     var escaped = userMessageText.Replace("\"", "\\\"").Replace("\n", "");
@@ -228,7 +244,7 @@ namespace MyChatApp
             try
             {
                 // Get the response from the AI model
-                await foreach (var chunk in _aiChat.GetResponseAsync(userMessageText,chkStreaming.Checked))
+                await foreach (var chunk in _aiChat.GetResponseAsync(userMessageText, chkStreaming.Checked, _fileAttachment, modelCombo.Text, chkUseTools.Checked))
                 {
                     fullResponse += chunk;
 
@@ -247,12 +263,17 @@ namespace MyChatApp
             {
                 DisplayStatusMessage("Error: " + ex.Message);
             }
+            finally
+            {
+                // Clear the file attachment after sending the message
+                _fileAttachment = null;
+            }
         }
 
         private void btnNewChat_Click(object sender, EventArgs e)
         {
             _aiChat.CreateNewChat();
-            chatHistory.SelectedIndex = chatHistory.Items.Count - 1;    
+            chatHistory.SelectedIndex = chatHistory.Items.Count - 1;
         }
 
         private void chatHistory_SelectedIndexChanged(object sender, EventArgs e)
@@ -263,7 +284,7 @@ namespace MyChatApp
 
         private void chatHistory_SelectedValueChanged(object sender, EventArgs e)
         {
-            
+
         }
 
         public void DisplayStatusMessage(string message)
@@ -271,6 +292,29 @@ namespace MyChatApp
             // Display the status message in a label or status bar
             // For example, you can use a Label control named statusLabel
             statusText.Text = message;
+        }
+        string _fileAttachment;
+        private void btnAttach_Click(object sender, EventArgs e)
+        {
+            var dr = openFileDialog1.ShowDialog();
+            if (dr == DialogResult.OK)
+            {
+                var filePath = openFileDialog1.FileName;
+                if (File.Exists(filePath))
+                {
+                    _fileAttachment = filePath;
+                    DisplayStatusMessage($"Attached file: {Path.GetFileName(filePath)}");
+                }
+                else
+                {
+                    DisplayStatusMessage("File does not exist.");
+                }
+            }
+        }
+
+        private void btnAbout_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("A simple LLM Chat app developed with Semantic Kernel\n 15 July 2025.", "About MyChatApp", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

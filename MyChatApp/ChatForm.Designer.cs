@@ -28,21 +28,30 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChatForm));
             splitContainer1 = new SplitContainer();
             chatHistory = new ListBox();
             splitContainer2 = new SplitContainer();
             chatContent = new Microsoft.Web.WebView2.WinForms.WebView2();
             splitContainer3 = new SplitContainer();
             userMessage = new TextBox();
+            chkUseTools = new CheckBox();
+            btnAttach = new Button();
             chkStreaming = new CheckBox();
             btnNewChat = new Button();
             btnSend = new Button();
             toolStrip1 = new ToolStrip();
-            toolsProgress = new ToolStripProgressBar();
+            toolStripLabel1 = new ToolStripLabel();
+            modelCombo = new ToolStripComboBox();
             toolStripSeparator1 = new ToolStripSeparator();
-            toolsCombo = new ToolStripComboBox();
+            toolStripLabel2 = new ToolStripLabel();
+            toolsDropDown = new ToolStripDropDownButton();
+            toolsProgress = new ToolStripProgressBar();
+            toolStripSeparator2 = new ToolStripSeparator();
+            toolStripLabel3 = new ToolStripLabel();
             statusText = new ToolStripLabel();
-            cmbModels = new ComboBox();
+            openFileDialog1 = new OpenFileDialog();
+            btnAbout = new Button();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
@@ -72,8 +81,8 @@
             // splitContainer1.Panel2
             // 
             splitContainer1.Panel2.Controls.Add(splitContainer2);
-            splitContainer1.Size = new Size(1088, 622);
-            splitContainer1.SplitterDistance = 148;
+            splitContainer1.Size = new Size(1178, 686);
+            splitContainer1.SplitterDistance = 160;
             splitContainer1.TabIndex = 0;
             // 
             // chatHistory
@@ -82,7 +91,7 @@
             chatHistory.FormattingEnabled = true;
             chatHistory.Location = new Point(0, 0);
             chatHistory.Name = "chatHistory";
-            chatHistory.Size = new Size(148, 622);
+            chatHistory.Size = new Size(160, 686);
             chatHistory.TabIndex = 0;
             chatHistory.SelectedIndexChanged += chatHistory_SelectedIndexChanged;
             chatHistory.SelectedValueChanged += chatHistory_SelectedValueChanged;
@@ -101,8 +110,8 @@
             // splitContainer2.Panel2
             // 
             splitContainer2.Panel2.Controls.Add(splitContainer3);
-            splitContainer2.Size = new Size(936, 622);
-            splitContainer2.SplitterDistance = 487;
+            splitContainer2.Size = new Size(1014, 686);
+            splitContainer2.SplitterDistance = 523;
             splitContainer2.TabIndex = 0;
             // 
             // chatContent
@@ -113,7 +122,7 @@
             chatContent.Dock = DockStyle.Fill;
             chatContent.Location = new Point(0, 0);
             chatContent.Name = "chatContent";
-            chatContent.Size = new Size(936, 487);
+            chatContent.Size = new Size(1014, 523);
             chatContent.TabIndex = 0;
             chatContent.ZoomFactor = 1D;
             // 
@@ -129,12 +138,14 @@
             // 
             // splitContainer3.Panel2
             // 
-            splitContainer3.Panel2.Controls.Add(cmbModels);
+            splitContainer3.Panel2.Controls.Add(btnAbout);
+            splitContainer3.Panel2.Controls.Add(chkUseTools);
+            splitContainer3.Panel2.Controls.Add(btnAttach);
             splitContainer3.Panel2.Controls.Add(chkStreaming);
             splitContainer3.Panel2.Controls.Add(btnNewChat);
             splitContainer3.Panel2.Controls.Add(btnSend);
-            splitContainer3.Size = new Size(936, 131);
-            splitContainer3.SplitterDistance = 745;
+            splitContainer3.Size = new Size(1014, 159);
+            splitContainer3.SplitterDistance = 807;
             splitContainer3.TabIndex = 0;
             // 
             // userMessage
@@ -144,16 +155,36 @@
             userMessage.Location = new Point(0, 0);
             userMessage.Multiline = true;
             userMessage.Name = "userMessage";
-            userMessage.Size = new Size(745, 131);
+            userMessage.Size = new Size(807, 159);
             userMessage.TabIndex = 0;
             userMessage.KeyDown += userMessage_KeyDown;
+            // 
+            // chkUseTools
+            // 
+            chkUseTools.AutoSize = true;
+            chkUseTools.Location = new Point(27, 46);
+            chkUseTools.Name = "chkUseTools";
+            chkUseTools.Size = new Size(75, 19);
+            chkUseTools.TabIndex = 5;
+            chkUseTools.Text = "Use Tools";
+            chkUseTools.UseVisualStyleBackColor = true;
+            // 
+            // btnAttach
+            // 
+            btnAttach.Location = new Point(144, 80);
+            btnAttach.Name = "btnAttach";
+            btnAttach.Size = new Size(31, 23);
+            btnAttach.TabIndex = 4;
+            btnAttach.Text = "+";
+            btnAttach.UseVisualStyleBackColor = true;
+            btnAttach.Click += btnAttach_Click;
             // 
             // chkStreaming
             // 
             chkStreaming.AutoSize = true;
             chkStreaming.Checked = true;
             chkStreaming.CheckState = CheckState.Checked;
-            chkStreaming.Location = new Point(19, 50);
+            chkStreaming.Location = new Point(26, 22);
             chkStreaming.Name = "chkStreaming";
             chkStreaming.Size = new Size(133, 19);
             chkStreaming.TabIndex = 2;
@@ -162,19 +193,19 @@
             // 
             // btnNewChat
             // 
-            btnNewChat.Location = new Point(100, 80);
+            btnNewChat.Location = new Point(85, 80);
             btnNewChat.Name = "btnNewChat";
-            btnNewChat.Size = new Size(75, 23);
+            btnNewChat.Size = new Size(53, 23);
             btnNewChat.TabIndex = 1;
-            btnNewChat.Text = "New Chat";
+            btnNewChat.Text = "New";
             btnNewChat.UseVisualStyleBackColor = true;
             btnNewChat.Click += btnNewChat_Click;
             // 
             // btnSend
             // 
-            btnSend.Location = new Point(19, 80);
+            btnSend.Location = new Point(26, 80);
             btnSend.Name = "btnSend";
-            btnSend.Size = new Size(75, 23);
+            btnSend.Size = new Size(53, 23);
             btnSend.TabIndex = 0;
             btnSend.Text = "Send";
             btnSend.UseVisualStyleBackColor = true;
@@ -183,27 +214,59 @@
             // toolStrip1
             // 
             toolStrip1.Dock = DockStyle.Bottom;
-            toolStrip1.Items.AddRange(new ToolStripItem[] { toolsProgress, toolStripSeparator1, toolsCombo, statusText });
-            toolStrip1.Location = new Point(0, 597);
+            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripLabel1, modelCombo, toolStripSeparator1, toolStripLabel2, toolsDropDown, toolsProgress, toolStripSeparator2, toolStripLabel3, statusText });
+            toolStrip1.Location = new Point(0, 661);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new Size(1088, 25);
+            toolStrip1.Size = new Size(1178, 25);
             toolStrip1.TabIndex = 1;
             toolStrip1.Text = "toolStrip1";
             // 
-            // toolsProgress
+            // toolStripLabel1
             // 
-            toolsProgress.Name = "toolsProgress";
-            toolsProgress.Size = new Size(100, 22);
+            toolStripLabel1.Name = "toolStripLabel1";
+            toolStripLabel1.Size = new Size(46, 22);
+            toolStripLabel1.Text = "Models";
+            // 
+            // modelCombo
+            // 
+            modelCombo.Name = "modelCombo";
+            modelCombo.Size = new Size(121, 25);
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
             toolStripSeparator1.Size = new Size(6, 25);
             // 
-            // toolsCombo
+            // toolStripLabel2
             // 
-            toolsCombo.Name = "toolsCombo";
-            toolsCombo.Size = new Size(121, 25);
+            toolStripLabel2.Name = "toolStripLabel2";
+            toolStripLabel2.Size = new Size(66, 22);
+            toolStripLabel2.Text = "Tools(mcp)";
+            // 
+            // toolsDropDown
+            // 
+            toolsDropDown.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            toolsDropDown.Image = (Image)resources.GetObject("toolsDropDown.Image");
+            toolsDropDown.ImageTransparentColor = Color.Magenta;
+            toolsDropDown.Name = "toolsDropDown";
+            toolsDropDown.Size = new Size(83, 22);
+            toolsDropDown.Text = "Select Items";
+            // 
+            // toolsProgress
+            // 
+            toolsProgress.Name = "toolsProgress";
+            toolsProgress.Size = new Size(100, 22);
+            // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(6, 25);
+            // 
+            // toolStripLabel3
+            // 
+            toolStripLabel3.Name = "toolStripLabel3";
+            toolStripLabel3.Size = new Size(42, 22);
+            toolStripLabel3.Text = "Status:";
             // 
             // statusText
             // 
@@ -211,23 +274,29 @@
             statusText.Size = new Size(76, 22);
             statusText.Text = "Please Wait...";
             // 
-            // cmbModels
+            // openFileDialog1
             // 
-            cmbModels.FormattingEnabled = true;
-            cmbModels.Location = new Point(18, 18);
-            cmbModels.Name = "cmbModels";
-            cmbModels.Size = new Size(157, 23);
-            cmbModels.TabIndex = 3;
+            openFileDialog1.FileName = "openFileDialog1";
             // 
-            // Form1
+            // btnAbout
+            // 
+            btnAbout.Location = new Point(29, 113);
+            btnAbout.Name = "btnAbout";
+            btnAbout.Size = new Size(53, 23);
+            btnAbout.TabIndex = 6;
+            btnAbout.Text = "About";
+            btnAbout.UseVisualStyleBackColor = true;
+            btnAbout.Click += btnAbout_Click;
+            // 
+            // ChatForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1088, 622);
+            ClientSize = new Size(1178, 686);
             Controls.Add(toolStrip1);
             Controls.Add(splitContainer1);
-            Name = "Form1";
-            Text = "Form1";
+            Name = "ChatForm";
+            Text = "JFK LLM Chat";
             Load += Form1_Load;
             splitContainer1.Panel1.ResumeLayout(false);
             splitContainer1.Panel2.ResumeLayout(false);
@@ -261,11 +330,19 @@
         private ListBox chatHistory;
         private Microsoft.Web.WebView2.WinForms.WebView2 chatContent;
         private ToolStrip toolStrip1;
-        private ToolStripComboBox toolsCombo;
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripLabel statusText;
         private ToolStripProgressBar toolsProgress;
         private CheckBox chkStreaming;
-        private ComboBox cmbModels;
+        private OpenFileDialog openFileDialog1;
+        private Button btnAttach;
+        private ToolStripLabel toolStripLabel1;
+        private ToolStripComboBox modelCombo;
+        private ToolStripLabel toolStripLabel2;
+        private CheckBox chkUseTools;
+        private ToolStripSeparator toolStripSeparator2;
+        private ToolStripLabel toolStripLabel3;
+        private ToolStripDropDownButton toolsDropDown;
+        private Button btnAbout;
     }
 }

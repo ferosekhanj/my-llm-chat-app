@@ -14,10 +14,7 @@ namespace MyChatApp
 {
     public class AIChat
     {
-
         public readonly ILogger<AIChat> _logger;
-
-        public readonly Kernel _kernel;
 
         public string ActiveChatKey { get; private set; } = Guid.NewGuid().ToString();
         public ChatHistory ActiveChat { get; private set; } = new ChatHistory();
@@ -30,85 +27,20 @@ namespace MyChatApp
 
         private BindingList<string> Models { get; } = new();
 
-        private IChatCompletionService _chatCompletionService;
-        private ToolRepository _toolRepository;
-        private PromptExecutionSettings _promptExecutionSettings;
-        private MyChatAppSettings _appSettings;
+        private AIChatProviders _aiChatProviders;
 
-        public AIChat(ToolRepository toolRepository)
+        public AIChat(AIChatProviders aIChatProviders)
         {
-            LoadConfigurations();
-            // Create a kernel with OpenAI chat completion
-
-            // Create a kernel with OpenAI chat completion
-            //var builder = Kernel.CreateBuilder().AddOpenAIChatCompletion("gpt-4o", _appSettings.OpenAIApiKey);
-            //_promptExecutionSettings = new OpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(options: new() { RetainArgumentTypes = true }) };
-
-            // OpenAI compatible
-            //var builder = Kernel.CreateBuilder().AddOpenAIChatCompletion("qwen3-30b-a3b", new Uri("https://api.siemens.com/llm/v1"), _appSettings.SiemensApiKey);
-            //_promptExecutionSettings = new OpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(options: new() { RetainArgumentTypes = true }) };
-
-            // Grok OpenAI compatible
-            //var builder = Kernel.CreateBuilder().AddOpenAIChatCompletion("grok-3-mini-fast", new Uri("https://api.x.ai/v1"), _appSettings.GrokApiKey);
-            //_promptExecutionSettings = new OpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() };
-
-            // ollama
-#pragma warning disable SKEXP0070
-            var builder = Kernel.CreateBuilder().AddOllamaChatCompletion("gemma3:latest", new Uri("http://localhost:11434"));
-            _promptExecutionSettings = new OllamaPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() };
+            _aiChatProviders = aIChatProviders; 
 
             // Add enterprise components
-            builder.Services
-                .AddLogging(services => services.AddConsole().SetMinimumLevel(LogLevel.Critical));
-
-            // Build the kernel
-            _kernel = builder.Build();
-            _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
-
+            _aiChatProviders.GetServices().AddLogging(services => services.AddConsole().SetMinimumLevel(LogLevel.Critical));
 
             // Fetch the logger
-            _logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<AIChat>>();
+            _logger = _aiChatProviders.GetServices().BuildServiceProvider().GetRequiredService<ILogger<AIChat>>();
 
             _chatHistories.Add(new ChatDetails { Name = ActiveChatKey, ChatHistory = ActiveChat });
 
-            _toolRepository = toolRepository;
-
-            _toolRepository.InitializeMcpClients().ContinueWith(async task =>
-            {
-                if (task.IsCompletedSuccessfully)
-                {
-                    _logger.LogInformation("MCP clients initialized successfully.");
-                    var mcpClients = _toolRepository.GetAvailableServers();
-                    foreach(var client in mcpClients)
-                    {
-                        _logger.LogInformation("MCP Client: {Name}", client.ServerInfo.Name);
-
-                        var tools = await client.ListToolsAsync();
-
-                        // Register the MCP clients with the kernel
-                        _kernel.Plugins.AddFromFunctions(client.ServerInfo.Name.Replace("-","_"), tools.Select(aiFunction => aiFunction.AsKernelFunction()));
-                        _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
-
-                    }
-                    OnStatusChanged("Ready.");
-                }
-                else
-                {
-                    _logger.LogError("Failed to initialize MCP clients: {Error}", task.Exception?.Message);
-                }
-            });
-        }
-
-        private void LoadConfigurations()
-        {
-            // Load configuration from User Secrets
-            var config = new ConfigurationBuilder()
-                .AddUserSecrets<Program>() // based on UserSecretsId in .csproj
-                .Build();
-
-            // Bind to strongly typed class
-            _appSettings = new MyChatAppSettings();
-            config.GetSection("MyChatAppSettings").Bind(_appSettings);
         }
 
         public void CreateNewChat()
@@ -141,31 +73,43 @@ namespace MyChatApp
             OnActiveChatChanged(ActiveChat);
         }
 
-        public async IAsyncEnumerable<String> GetResponseAsync(string userMessage, bool enableStreaming = true)
+        public async IAsyncEnumerable<String> GetResponseAsync(string userMessage, bool enableStreaming = true, string fileAttachment = null, string modelId = "siemens", bool useTools = false)
         {
             OnStatusChanged("Working...");
             // Log the user message
             _logger.LogInformation("{UserMessage}", userMessage);
 
-            // Add the user message to the active chat history
-            ActiveChat.AddUserMessage(userMessage);
-
-            var promptExecutionSettings = new OpenAIPromptExecutionSettings()
+            // Add the file attachment
+            if(fileAttachment != null)
             {
-                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
-            };
-
+                var fileContent = await File.ReadAllTextAsync(fileAttachment);
+                ActiveChat.Add(new ChatMessageContent()
+                {
+                    Role = AuthorRole.User,
+                    Items = [
+                        new TextContent(userMessage),
+                        GetFileAttachmentContent(fileAttachment)
+                       ]
+                });
+            }
+            else
+            {
+                // Add the user message to the active chat history
+                ActiveChat.AddUserMessage(userMessage);
+            }
+            var (_kernel, _chatCompletionService, _promptExecutionSettings) = _aiChatProviders.GetKernelAndSettings(modelId, useTools);
             foreach (var plugins in _kernel.Plugins)
             {
                 _logger.LogInformation("Plugin: {Name}", plugins.Name);
             }
+
             var fullResponse = "";
             if (!enableStreaming)
             {
                 // Get the response from the AI model
                 var response = await _chatCompletionService.GetChatMessageContentsAsync(
                     ActiveChat,
-                    promptExecutionSettings,
+                    _promptExecutionSettings,
                     _kernel);
 
                 foreach (var chunk in response)
@@ -179,7 +123,7 @@ namespace MyChatApp
                 // Get the response from the AI model
                 var response = _chatCompletionService.GetStreamingChatMessageContentsAsync(
                     ActiveChat,
-                    promptExecutionSettings,
+                    _promptExecutionSettings,
                     _kernel);
 
                 await foreach (var chunk in response)
@@ -194,6 +138,37 @@ namespace MyChatApp
             // Add the AI response to the active chat history
             ActiveChat.AddAssistantMessage(fullResponse);
         }
+
+        private KernelContent GetFileAttachmentContent(string fileAttachment)
+        {
+            if (string.IsNullOrEmpty(fileAttachment) || !File.Exists(fileAttachment))
+            {
+                return null;
+            }
+
+            switch(Path.GetExtension(fileAttachment).ToLower())
+            {
+                case ".txt":
+                    var fileContent = File.ReadAllText(fileAttachment);
+                    // Create a TextContent object
+                    return new TextContent(fileContent);
+                // Add more cases for other file types if needed
+                case ".jpg":
+                case ".jpeg":
+                    var fileBytes1 = File.ReadAllBytes(fileAttachment);
+                    // Create an ImageContent object
+                    return new ImageContent(fileBytes1, "image/jpeg");
+                case ".png":
+                    var fileBytes2 = File.ReadAllBytes(fileAttachment);
+                    // Create an ImageContent object
+                    return new ImageContent(fileBytes2, "image/png");
+                default:
+                    throw new NotSupportedException($"File type not supported: {fileAttachment}");
+            }
+
+            // Read the file content
+        }
+
         public async Task<String> GetTitleForChat(string key)
         {
             OnStatusChanged("Creating title...");
@@ -209,10 +184,12 @@ namespace MyChatApp
             // Add the user message to the active chat history
             chat.AddUserMessage("Create a short title for this chat so that it can be shown in the list.");
 
+            var (_kernel, _chatCompletionService, _promptExecutionSettings) = _aiChatProviders.GetKernelAndSettings("siemens", false);
+
             // Get the response from the AI model
             var response = await _chatCompletionService.GetChatMessageContentAsync(
                 chat,
-                null,
+                _promptExecutionSettings,
                 _kernel);
             chat.RemoveAt(chat.Count - 1); // Remove the last user message
 
@@ -245,12 +222,5 @@ namespace MyChatApp
             StatusChanged?.Invoke(this, status);
         }
 
-    }
-
-    public class ChatDetails 
-    {
-        public string Name { get; set;}
-        public ChatHistory ChatHistory { get; set; }
-        public override string ToString() => Name;
     }
 }

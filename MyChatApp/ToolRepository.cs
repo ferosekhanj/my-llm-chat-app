@@ -28,11 +28,12 @@ namespace MyChatApp
         private readonly string _configFilePath;
         private McpConfiguration? _configuration;
         private BindingList<IMcpClient> _mcpClients = new();
-
-        public ToolRepository(string configFilePath = "E:\\ws\\chatgpt\\mcp.json")
+        private List<McpClientTool> _mcpTools = new ();
+        private MyChatAppSettings _appSettings;
+        public ToolRepository(MyChatAppSettings appSettings)
         {
-            _configFilePath = configFilePath;
-
+            _appSettings = appSettings;
+            _configFilePath = appSettings.McpConfigFilePath;
         }
 
         private async Task LoadConfiguration()
@@ -75,6 +76,10 @@ namespace MyChatApp
 
                     var mcpClient = await McpClientFactory.CreateAsync(clientTransport);
                     _mcpClients.Add(mcpClient);
+
+                    var tools = await mcpClient.ListToolsAsync();
+                    _mcpTools.AddRange(tools);
+
                     OnProgressChanged((++loaded / total) * 100);
                 }
                 catch (Exception ex)
@@ -97,6 +102,11 @@ namespace MyChatApp
             {
                 return _mcpClients;
             }
+        }
+
+        public IList<McpClientTool> GetAvailableTools()
+        {
+            return _mcpTools;
         }
 
         public async Task DisposeAsync()

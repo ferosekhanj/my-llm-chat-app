@@ -14,13 +14,20 @@ namespace MyChatApp
         [STAThread]
         static void Main()
         {
+            // Load configuration from User Secrets
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .Build();
+
+            // Bind to strongly typed class
+            MyChatAppSettings _appSettings = new MyChatAppSettings();
+            config.Bind(_appSettings);
+
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-#pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            Application.SetColorMode(SystemColorMode.System);
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            Application.Run(new ChatForm());
+            Application.Run(new ChatForm(_appSettings));
         }
     }
 }
