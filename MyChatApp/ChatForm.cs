@@ -79,6 +79,7 @@ namespace MyChatApp
             }
             modelCombo.EndUpdate();
             modelCombo.SelectedIndex = 0;
+            _aiChat.ActiveModel = modelCombo.Text;
         }
 
         private async void _aiChat_ActiveChatChanged(object? sender, Microsoft.SemanticKernel.ChatCompletion.ChatHistory e)
@@ -89,11 +90,11 @@ namespace MyChatApp
             for (int i = 0; i < e.Count; i++)
             {
                 var userMessageText = e[i].Content;
-                if ( userMessageText == "" || e[i].Role == AuthorRole.Tool)
+                if (userMessageText == "" || e[i].Role == AuthorRole.Tool)
                 {
                     continue;
                 }
-                if (i % 2 == 0)
+                if (e[i].Role == AuthorRole.User)
                 {
                     // Escape quotes for JavaScript
                     var escaped = userMessageText.Replace("\"", "\\\"");
@@ -376,6 +377,11 @@ namespace MyChatApp
             timer1.Stop();
             await _aiChat.CreateTitlesAsync();
             timer1.Start();
+        }
+
+        private void modelCombo_SelectedChanged(object sender, EventArgs e)
+        {
+            _aiChat.ActiveModel = modelCombo.SelectedItem?.ToString() ?? string.Empty;
         }
     }
 }

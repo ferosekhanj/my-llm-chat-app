@@ -22,6 +22,7 @@ namespace MyChatApp
 
         public readonly ILogger<AIChat> _logger;
 
+        public string ActiveModel { get; set; }
         public string ActiveChatKey { get; private set; } = $"New Chat {RunningCount++}";
         public ChatHistory ActiveChat { get; private set; } = new ChatHistory();
 
@@ -197,7 +198,7 @@ namespace MyChatApp
                 return "ALready done";
             }
 
-            var (_kernel, _chatCompletionService, _promptExecutionSettings) = _aiChatProviders.GetKernelAndSettings("siemens", false);
+            var (_kernel, _chatCompletionService, _promptExecutionSettings) = _aiChatProviders.GetKernelAndSettings(ActiveModel, false);
 
             // Get the response from the AI model
             var response = await _chatCompletionService.GetChatMessageContentAsync(

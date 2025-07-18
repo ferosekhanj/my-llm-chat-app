@@ -92,6 +92,8 @@ namespace MyChatApp
             throw new ArgumentException($"Provider '{providerName}' not found.");
         }
 
+
+
         public void AddTools(Kernel _kernel)
         {
             var tools = _toolRepository.GetAvailableTools();

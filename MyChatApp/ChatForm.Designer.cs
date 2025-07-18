@@ -284,6 +284,7 @@
             // 
             modelCombo.Name = "modelCombo";
             modelCombo.Size = new Size(121, 25);
+            modelCombo.SelectedChanged += modelCombo_SelectedChanged;
             // 
             // toolStripSeparator1
             // 
