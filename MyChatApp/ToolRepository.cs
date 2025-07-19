@@ -27,13 +27,14 @@ namespace MyChatApp
     {
         private readonly string _configFilePath;
         private McpConfiguration? _configuration;
-        private BindingList<IMcpClient> _mcpClients = new();
+        private List<IMcpClient> _mcpClients = new();
         private List<McpClientTool> _mcpTools = new ();
         private MyChatAppSettings _appSettings;
         public ToolRepository(MyChatAppSettings appSettings)
         {
             _appSettings = appSettings;
             _configFilePath = appSettings.McpConfigFilePath;
+            Task.Run(async ()=>await InitializeMcpClients());
         }
 
         private async Task LoadConfiguration()
@@ -58,7 +59,7 @@ namespace MyChatApp
                 await LoadConfiguration();
             }
 
-            OnStatusChanged("Creating MCP Servers...");
+            OnStatusChanged("Please wait creating MCP Servers...");
 
             var total = _configuration!.McpServers.Count;
             var loaded = 0;
@@ -66,6 +67,7 @@ namespace MyChatApp
             {
                 try
                 {
+                    OnStatusChanged($"Please wait creating {server.Key}");
                     var clientTransport = new StdioClientTransport(new()
                     {
                         Name = server.Key,
@@ -79,8 +81,6 @@ namespace MyChatApp
 
                     var tools = await mcpClient.ListToolsAsync();
                     _mcpTools.AddRange(tools);
-
-                    OnProgressChanged((++loaded / total) * 100);
                 }
                 catch (Exception ex)
                 {
@@ -88,7 +88,8 @@ namespace MyChatApp
                     Console.WriteLine($"Failed to initialize MCP client for {server.Key}: {ex.Message}");
                 }
             }
-            OnStatusChanged("Completed MCP server creation");
+            OnToolsLoaded();
+            OnStatusChanged("Ready.");
         }
 
         public IEnumerable<IMcpClient> GetAvailableServers()
@@ -96,7 +97,7 @@ namespace MyChatApp
             return _mcpClients;
         }
 
-        public BindingList<IMcpClient> McpClients
+        public IList<IMcpClient> McpClients
         {
             get
             {
@@ -125,16 +126,17 @@ namespace MyChatApp
             _mcpClients.Clear();
         }
 
-        public event EventHandler<int> ProgressChanged;
-        protected virtual void OnProgressChanged(int progress)
-        {
-            ProgressChanged?.Invoke(this, progress);
-        }
-
         public event EventHandler<string> StatusChanged;
         protected virtual void OnStatusChanged(string status)
         {
             StatusChanged?.Invoke(this, status);
         }
+
+        public event EventHandler ToolsLoaded;
+        protected virtual void OnToolsLoaded()
+        {
+            ToolsLoaded?.Invoke(this, EventArgs.Empty);
+        }
+
     }
 }

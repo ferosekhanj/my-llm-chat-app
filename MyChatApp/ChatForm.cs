@@ -28,9 +28,8 @@ namespace MyChatApp
             _aiChatProviders = new AIChatProviders(_appSettings, _toolRepo);
             _aiChat = new AIChat(_aiChatProviders);
 
-            _toolRepo.ProgressChanged += (s, e) => this.BeginInvoke(() => toolsProgress.Value = e);
             _toolRepo.StatusChanged += (s, e) => this.BeginInvoke(() => DisplayStatusMessage(e));
-            _toolRepo.McpClients.ListChanged += (s, e) => this.BeginInvoke(() => RefreshTools());
+            _toolRepo.ToolsLoaded += (s, e) => this.BeginInvoke(() => RefreshTools());
 
             _aiChat.ActiveChatChanged += _aiChat_ActiveChatChanged;
             _aiChat.StatusChanged += (s, e) => this.BeginInvoke(() => DisplayStatusMessage(e));
@@ -62,7 +61,7 @@ namespace MyChatApp
         private void RefreshTools()
         {
             toolsDropDown.DropDownItems.Clear();
-            toolsDropDown.DropDownItems.Add("All");
+            toolsDropDown.DropDownItems.Add(new ToolStripMenuItem("All") { CheckOnClick = true });
             foreach (var tool in _toolRepo.GetAvailableTools())
             {
                 toolsDropDown.DropDownItems.Add(new ToolStripMenuItem(tool.Name) { CheckOnClick = true });
@@ -80,6 +79,24 @@ namespace MyChatApp
             modelCombo.EndUpdate();
             modelCombo.SelectedIndex = 0;
             _aiChat.ActiveModel = modelCombo.Text;
+        }
+
+        private IList<string> GetSelectedTools()
+        {
+            var selectedTools = new List<string>();
+            // Check if "All" is selected
+            if (toolsDropDown.DropDownItems[0].Text == "All" && ((ToolStripMenuItem)toolsDropDown.DropDownItems[0]).Checked)
+            {
+                return _toolRepo.GetAvailableTools().Select(t => t.Name).ToList();
+            }
+            foreach (ToolStripMenuItem item in toolsDropDown.DropDownItems)
+            {
+                if (item.Checked && item.Text != "All")
+                {
+                    selectedTools.Add(item.Text);
+                }
+            }
+            return selectedTools;
         }
 
         private async void _aiChat_ActiveChatChanged(object? sender, Microsoft.SemanticKernel.ChatCompletion.ChatHistory e)
@@ -294,7 +311,7 @@ namespace MyChatApp
             try
             {
                 // Get the response from the AI model
-                await foreach (var chunk in _aiChat.GetResponseAsync(userMessageText, chkStreaming.Checked, _fileAttachment, modelCombo.Text, chkUseTools.Checked))
+                await foreach (var chunk in _aiChat.GetResponseAsync(userMessageText, chkStreaming.Checked, _fileAttachment, modelCombo.Text, chkUseTools.Checked, GetSelectedTools()))
                 {
                     fullResponse += chunk;
 

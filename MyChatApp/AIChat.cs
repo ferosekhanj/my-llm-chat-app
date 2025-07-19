@@ -76,7 +76,7 @@ namespace MyChatApp
             OnActiveChatChanged(ActiveChat);
         }
 
-        public async IAsyncEnumerable<String> GetResponseAsync(string userMessage, bool enableStreaming = true, string fileAttachment = null, string modelId = "siemens", bool useTools = false)
+        public async IAsyncEnumerable<String> GetResponseAsync(string userMessage, bool enableStreaming = true, string fileAttachment = null, string modelId = "siemens", bool useTools = false, IList<string> selectedTools = null)
         {
             OnStatusChanged("Working...");
             // Log the user message
@@ -100,7 +100,7 @@ namespace MyChatApp
                 // Add the user message to the active chat history
                 ActiveChat.AddUserMessage(userMessage);
             }
-            var (_kernel, _chatCompletionService, _promptExecutionSettings) = _aiChatProviders.GetKernelAndSettings(modelId, useTools);
+            var (_kernel, _chatCompletionService, _promptExecutionSettings) = _aiChatProviders.GetKernelAndSettings(modelId, useTools, selectedTools);
             foreach (var plugins in _kernel.Plugins)
             {
                 _logger.LogInformation("Plugin: {Name}", plugins.Name);
@@ -198,7 +198,7 @@ namespace MyChatApp
                 return "ALready done";
             }
 
-            var (_kernel, _chatCompletionService, _promptExecutionSettings) = _aiChatProviders.GetKernelAndSettings(ActiveModel, false);
+            var (_kernel, _chatCompletionService, _promptExecutionSettings) = _aiChatProviders.GetKernelAndSettings(ActiveModel);
 
             // Get the response from the AI model
             var response = await _chatCompletionService.GetChatMessageContentAsync(
@@ -255,6 +255,7 @@ namespace MyChatApp
             {
                 return;
             }
+            OnStatusChanged("Loading chat histories...");
             var chatHistoryFiles = Directory.GetFiles("ChatHistories", "*.json");
             foreach (var file in chatHistoryFiles)
             {
@@ -271,7 +272,7 @@ namespace MyChatApp
                     _logger.LogError(ex, "Failed to load chat history from file: {File}", file);
                 }
             }
-
+            OnStatusChanged("Ready.");
         }
 
         public event EventHandler<ChatHistory> ActiveChatChanged;

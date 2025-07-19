@@ -51,7 +51,6 @@
             toolStripSeparator1 = new ToolStripSeparator();
             toolStripLabel2 = new ToolStripLabel();
             toolsDropDown = new ToolStripDropDownButton();
-            toolsProgress = new ToolStripProgressBar();
             toolStripSeparator2 = new ToolStripSeparator();
             toolStripLabel3 = new ToolStripLabel();
             statusText = new ToolStripLabel();
@@ -267,7 +266,7 @@
             // toolStrip1
             // 
             toolStrip1.Dock = DockStyle.Bottom;
-            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripLabel1, modelCombo, toolStripSeparator1, toolStripLabel2, toolsDropDown, toolsProgress, toolStripSeparator2, toolStripLabel3, statusText });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripLabel1, modelCombo, toolStripSeparator1, toolStripLabel2, toolsDropDown, toolStripSeparator2, toolStripLabel3, statusText });
             toolStrip1.Location = new Point(0, 661);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(1178, 25);
@@ -305,11 +304,6 @@
             toolsDropDown.Name = "toolsDropDown";
             toolsDropDown.Size = new Size(83, 22);
             toolsDropDown.Text = "Select Items";
-            // 
-            // toolsProgress
-            // 
-            toolsProgress.Name = "toolsProgress";
-            toolsProgress.Size = new Size(100, 22);
             // 
             // toolStripSeparator2
             // 
@@ -395,7 +389,6 @@
         private ToolStrip toolStrip1;
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripLabel statusText;
-        private ToolStripProgressBar toolsProgress;
         private CheckBox chkStreaming;
         private OpenFileDialog openFileDialog1;
         private Button btnAttach;

@@ -27,20 +27,8 @@ namespace MyChatApp
 
             LoadProviders();
 
-            _toolRepository.InitializeMcpClients().ContinueWith(async task =>
-            {
-                if (task.IsCompletedSuccessfully)
-                {
-                    OnStatusChanged("Ready.");
-                }
-                else
-                {
-                    OnStatusChanged("Error "+ task.Exception?.Message);
-                }
-            });
-
         }
-        public void LoadProviders()
+        private void LoadProviders()
         {
             foreach (var llmProvider in _appSettings.LLMProviders)
             {
@@ -64,7 +52,7 @@ namespace MyChatApp
             builder.Services.AddLogging(services => services.AddConsole().SetMinimumLevel(LogLevel.Critical));
         }
 
-        public (Kernel, IChatCompletionService, PromptExecutionSettings) GetKernelAndSettings(string providerName, bool useTools)
+        public (Kernel, IChatCompletionService, PromptExecutionSettings) GetKernelAndSettings(string providerName, bool useTools= false,IList<string> selectedTools=null)
         {
             if (_kernels.TryGetValue(providerName, out var kernelInfo))
             {
@@ -76,14 +64,15 @@ namespace MyChatApp
                 var _kernel = kernelInfo.kernel;
                 var _promptExecutionSettings = kernelInfo.promptSettings;
                 var _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
+                ClearTools(kernelInfo.kernel);
+
                 if (useTools)
                 {
-                    if(_kernel.Plugins.Count == 0)
-                        AddTools(kernelInfo.kernel);
+
+                    AddTools(kernelInfo.kernel, selectedTools);
                 }
                 else
                 {
-                    ClearTools(kernelInfo.kernel);
                     _promptExecutionSettings = null;
                 }
 
@@ -92,13 +81,18 @@ namespace MyChatApp
             throw new ArgumentException($"Provider '{providerName}' not found.");
         }
 
-
-
-        public void AddTools(Kernel _kernel)
+        public void AddTools(Kernel _kernel, IList<string> selectedTools)
         {
-            var tools = _toolRepository.GetAvailableTools();
-            // Register the MCP clients with the kernel
-            _kernel.Plugins.AddFromFunctions("mcp_tools", tools.Select( aifunction=> aifunction.AsKernelFunction()));
+            var allTools = _toolRepository.GetAvailableTools();
+            
+            // Filter tools based on selected tools list
+            var filteredTools = allTools.Where(tool => selectedTools.Contains(tool.Name)).ToList();
+
+            // Register only the selected MCP tools with the kernel
+            if (filteredTools.Any())
+            {
+                _kernel.Plugins.AddFromFunctions("mcp_tools", filteredTools.Select(aifunction => aifunction.AsKernelFunction()));
+            }
         }
 
         public void ClearTools(Kernel _kernel)
