@@ -23,8 +23,7 @@ namespace MyChatApp
         public readonly ILogger<AIChat> _logger;
 
         public string ActiveModel { get; set; }
-        public string ActiveChatKey { get; private set; } = $"New Chat {RunningCount++}";
-        public ChatHistory ActiveChat { get; private set; } = new ChatHistory();
+        public ChatDetails ActiveChat { get; private set; } = new ();
 
         private BindingList<ChatDetails> _chatHistories = new();
         public BindingList<ChatDetails> ChatHistories 
@@ -46,16 +45,14 @@ namespace MyChatApp
             // Fetch the logger
             _logger = _aiChatProviders.GetServices().BuildServiceProvider().GetRequiredService<ILogger<AIChat>>();
 
-            _chatHistories.Add(new ChatDetails { Name = ActiveChatKey, ChatHistory = ActiveChat });
+            _chatHistories.Add(ActiveChat);
 
         }
 
         public void CreateNewChat()
         {
-            var activeChatKey = ActiveChatKey;
-
             // Create a new chat history
-            _chatHistories.Insert(0,new ChatDetails { Name = $"New Chat {RunningCount++}", ChatHistory = new ChatHistory() });
+            _chatHistories.Insert(0,new ChatDetails { Name = $"New Chat {RunningCount++}" });
 
             // Log the creation of a new chat
             _logger.LogInformation("New chat created with ID");
@@ -63,17 +60,16 @@ namespace MyChatApp
 
         public void SelectChat(ChatDetails details)
         {
-            if (details == null || details.Name == ActiveChatKey)
+            if (details == null || ActiveChat.Name == details.Name)
             {
                 return;
             }
 
             // Create a new chat history
-            ActiveChatKey = details.Name;
-            ActiveChat = details.ChatHistory;
+            ActiveChat = details;
 
             // Notify subscribers that the chat history has been updated
-            OnActiveChatChanged(ActiveChat);
+            OnActiveChatChanged(ActiveChat.ChatHistory);
         }
 
         public async IAsyncEnumerable<String> GetResponseAsync(string userMessage, bool enableStreaming = true, string fileAttachment = null, string modelId = "siemens", bool useTools = false, IList<string> selectedTools = null)
@@ -106,12 +102,21 @@ namespace MyChatApp
                 _logger.LogInformation("Plugin: {Name}", plugins.Name);
             }
 
+            ChatHistorySummarizationReducer reducer = new ChatHistorySummarizationReducer(_chatCompletionService, 4);
+            var reducedMessages = await reducer.ReduceAsync(ActiveChat.ShortChatHistory);
+
+            if (reducedMessages is not null)
+            {
+                ActiveChat.SetReducedHistory(new ChatHistory(reducedMessages));
+            }
+
             var fullResponse = "";
             if (!enableStreaming)
             {
+
                 // Get the response from the AI model
                 var response = await _chatCompletionService.GetChatMessageContentsAsync(
-                    ActiveChat,
+                    ActiveChat.ShortChatHistory,
                     _promptExecutionSettings,
                     _kernel);
 
@@ -125,7 +130,7 @@ namespace MyChatApp
             {
                 // Get the response from the AI model
                 var response = _chatCompletionService.GetStreamingChatMessageContentsAsync(
-                    ActiveChat,
+                    ActiveChat.ShortChatHistory,
                     _promptExecutionSettings,
                     _kernel);
 
@@ -243,7 +248,7 @@ namespace MyChatApp
                     // For example, you can serialize the chat history to JSON and save it to a file
                     var filePath = Path.Combine("ChatHistories", $"{chat.Name}.json");
                     Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                    File.WriteAllText(filePath, JsonSerializer.Serialize(chat.ChatHistory, JsonOptions));
+                    File.WriteAllText(filePath, JsonSerializer.Serialize(chat, JsonOptions));
                     chat.IsModified = false; // Reset the modified flag after saving
                 }
             }
@@ -261,10 +266,12 @@ namespace MyChatApp
             {
                 try
                 {
-                    var chatHistory = JsonSerializer.Deserialize<ChatHistory>(File.ReadAllText(file), JsonOptions);
-                    if (chatHistory != null)
+                    var chatDetails = JsonSerializer.Deserialize<ChatDetails>(File.ReadAllText(file), JsonOptions);
+                    if (chatDetails != null)
                     {
-                        _chatHistories.Add(new ChatDetails { Name = Path.GetFileNameWithoutExtension(file), ChatHistory = chatHistory, IsModified = false, IsTitleGenerated = true });
+                        _chatHistories.Add(chatDetails);
+                        chatDetails.IsModified = false;
+                        chatDetails.IsTitleGenerated = true; 
                     }
                 }
                 catch (Exception ex)

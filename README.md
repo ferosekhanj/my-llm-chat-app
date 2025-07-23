@@ -18,6 +18,11 @@ A powerful Windows Forms application that enables chat interactions with multipl
 
 - **Modern UI**: Clean Windows Forms interface built on .NET 9.0
 
+## Version
+- 1.0.0 - Initial release with core features
+- 1.1.0 - Added support for multiple LLM providers, MCP server integration, and function calling
+- 1.2.0 - Chat history management
+
 ## Prerequisites
 
 - Windows OS

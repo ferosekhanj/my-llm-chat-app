@@ -115,7 +115,7 @@ namespace MyChatApp
                 {
                     // Escape quotes for JavaScript
                     var escaped = userMessageText.Replace("\"", "\\\"");
-                    await chatContent.ExecuteScriptAsync($"addHtml(`{escaped}`);");
+                    await chatContent.ExecuteScriptAsync($"addUserHtml(`{escaped}`);");
                 }
                 else
                 {
@@ -128,7 +128,7 @@ namespace MyChatApp
                     var escaped = htmlChunk.Replace("\"", "\\\"");
 
                     // Inject into WebView2
-                    await chatContent.ExecuteScriptAsync($"updateHtml(`{escaped}`);");
+                    await chatContent.ExecuteScriptAsync($"addAIHtml(`{escaped}`);");
                 }
             }
         }
@@ -239,14 +239,19 @@ namespace MyChatApp
                     </style>
                     <script>
                         let replyDiv = null;
-                        function addHtml(content) {
+                        function addUserHtml(content) {
                             const div = document.createElement("div");
                             div.innerHTML = content;
                             div.className = "user-msg";
                             document.body.appendChild(div);
                             window.scrollTo(0, document.body.scrollHeight);
+                        }
+                        function addAIHtml(content) {
                             replyDiv = document.createElement("div");
+                            replyDiv.innerHTML = content;
+                            replyDiv.className = "bot-msg";
                             document.body.appendChild(replyDiv);
+                            window.scrollTo(0, document.body.scrollHeight);
                         }
                         function updateHtml(content) {
                             replyDiv.innerHTML = content;
@@ -301,7 +306,8 @@ namespace MyChatApp
             var userMessageText = userMessage.Text;
             // Escape quotes for JavaScript
             string escaped = userMessageText.Replace("\"", "\\\"");
-            await chatContent.ExecuteScriptAsync($"addHtml(`{escaped}`);");
+            await chatContent.ExecuteScriptAsync($"addUserHtml(`{escaped}`);");
+            await chatContent.ExecuteScriptAsync($"addAIHtml(`{"..."}`);");
 
             // Clear the input field
             userMessage.Clear();
