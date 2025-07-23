@@ -35,6 +35,12 @@
     <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.60.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3351.48" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.2" />
+    <!-- Serilog packages -->
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
