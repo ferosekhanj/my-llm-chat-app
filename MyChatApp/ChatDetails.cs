@@ -8,8 +8,8 @@ namespace MyChatApp
     public class ChatDetails 
     {
         public string Name { get; set;} = "New Chat";
-        public ChatHistory ChatHistory { get; private set; } = new ChatHistory();
-        public ChatHistory ShortChatHistory { get; private set; } = new ChatHistory();
+        public ChatHistory ChatHistory { get; set; } = new ChatHistory();
+        public ChatHistory ShortChatHistory { get; set; } = new ChatHistory();
         public bool IsModified { get; set; } = true;
         public bool IsTitleGenerated { get; set; } = false;
         public override string ToString() => Name;
