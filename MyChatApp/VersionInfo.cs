@@ -6,14 +6,14 @@ namespace MyChatApp
     {
         // Version Constants - Update these manually
         public const int MajorVersion = 1;
-        public const int MinorVersion = 0;
-        public const int PatchVersion = 2;
+        public const int MinorVersion = 3;
+        public const int PatchVersion = 0;
         public const int BuildNumber = 0;
         
         // String constants for assembly attributes (compile-time constants)
-        public const string AssemblyVersionString = "1.0.2.0";
-        public const string FileVersionString = "1.0.2.0";
-        public const string InformationalVersionString = "1.0.2";
+        public const string AssemblyVersionString = "1.3.0.0";
+        public const string FileVersionString = "1.3.0.0";
+        public const string InformationalVersionString = "1.3.0";
         
         // Computed Version Strings (runtime)
         public static string Version => $"{MajorVersion}.{MinorVersion}.{PatchVersion}";
@@ -60,5 +60,7 @@ namespace MyChatApp
         }
     }
 }
+
+
 
 

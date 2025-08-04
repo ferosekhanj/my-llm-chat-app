@@ -102,6 +102,7 @@ namespace MyChatApp
                 {
                     _logger.LogInformation("Building kernel for provider: {ProviderName}", providerName);
                     kernelInfo.kernel = kernelInfo.builder.Build();
+                    kernelInfo.kernel.AutoFunctionInvocationFilters.Add(AutoFunctionInvocationFilter.GetInstance(_logger));
                     _kernels[providerName] = (kernelInfo.builder, kernelInfo.promptSettings, kernelInfo.kernel);
                 }
                 var _kernel = kernelInfo.kernel;
@@ -180,5 +181,4 @@ namespace MyChatApp
             StatusChanged?.Invoke(this, status);
         }
     }
-
 }

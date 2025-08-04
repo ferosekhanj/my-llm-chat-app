@@ -22,6 +22,7 @@ A powerful Windows Forms application that enables chat interactions with multipl
 - 1.0.0 - Initial release with core features
 - 1.1.0 - Added support for multiple LLM providers, MCP server integration, and function calling
 - 1.2.0 - Chat history management
+- 1.3.0 - Added function invocation filter and logging
 
 ## Prerequisites
 
@@ -180,3 +181,5 @@ dotnet run --project MyChatApp
 - Built with Microsoft Semantic Kernel
 - Leverages Model Context Protocol for extensibility
 - Inspired by Claude Desktop's MCP integration
+
+

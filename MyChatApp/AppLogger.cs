@@ -24,7 +24,7 @@ namespace MyChatApp
         private static Serilog.ILogger CreateSerilogLogger()
         {
             return new LoggerConfiguration()
-                .MinimumLevel.Debug()
+                .MinimumLevel.Information()
                 .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
                 .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Information)
                 .Enrich.FromLogContext()
